@@ -1,0 +1,23 @@
+name: bicep
+
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/bicep.yml']
+  push:
+    branches: [main]
+    paths: ['infra/**']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bicep CLI
+        run: |
+          curl -sSLo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep && sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+      - name: Lint and build
+        run: |
+          for f in infra/main.bicep infra/budget.bicep; do bicep lint "$f"; bicep build "$f" --stdout > /dev/null; done
+          bicep build-params infra/main.bicepparam --stdout > /dev/null

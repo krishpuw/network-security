@@ -1,0 +1,6 @@
+# Compiled Bicep output
+*.json.bak
+infra/**/*.compiled.json
+# Local parameter overrides (may hold your public IP)
+infra/*.local.bicepparam
+.env
