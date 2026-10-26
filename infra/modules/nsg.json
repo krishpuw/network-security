@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.48.1.52935",
+      "templateHash": "10207379892605256755"
+    }
+  },
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "array"
+    }
+  },
+  "variables": {
+    "denyAll": [
+      {
+        "name": "Deny-All-Inbound",
+        "priority": 4096,
+        "direction": "Inbound",
+        "access": "Deny",
+        "protocol": "*",
+        "source": "*",
+        "destination": "*",
+        "port": "*"
+      },
+      {
+        "name": "Deny-All-Outbound",
+        "priority": 4096,
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "source": "*",
+        "destination": "*",
+        "port": "*"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-05-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "copy": [
+          {
+            "name": "securityRules",
+            "count": "[length(concat(parameters('rules'), variables('denyAll')))]",
+            "input": {
+              "name": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].name]",
+              "properties": {
+                "priority": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].priority]",
+                "direction": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].direction]",
+                "access": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].access]",
+                "protocol": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].protocol]",
+                "sourceAddressPrefix": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].source]",
+                "sourcePortRange": "*",
+                "destinationAddressPrefix": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].destination]",
+                "destinationPortRange": "[concat(parameters('rules'), variables('denyAll'))[copyIndex('securityRules')].port]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "id": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('name'))]"
+    }
+  }
+}
