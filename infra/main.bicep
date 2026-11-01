@@ -77,13 +77,34 @@ module nsgHoneypot 'modules/nsg.bicep' = {
   params: {
     name: 'nsg-${prefix}-snet-honeypot'
     location: location
-    rules: [
-      { name: 'Deny-Honeypot-to-VNet',  priority: 100, direction: 'Outbound', access: 'Deny',  protocol: '*',   source: honeypotPrefix, destination: 'VirtualNetwork', port: '*' }
-      { name: 'Allow-SSH-from-Internet', priority: 200, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: 'Internet',     destination: honeypotPrefix,   port: '22' }
-      { name: 'Allow-SSH-from-Attacker', priority: 210, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: attackerPrefix, destination: honeypotPrefix,   port: '22' }
-    ]
+    rules: concat(
+      [
+        { name: 'Deny-Honeypot-to-VNet',  priority: 100, direction: 'Outbound', access: 'Deny',  protocol: '*',   source: honeypotPrefix, destination: 'VirtualNetwork', port: '*' }
+        { name: 'Allow-SSH-from-Internet', priority: 200, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: 'Internet',     destination: honeypotPrefix,   port: '22' }
+        { name: 'Allow-SSH-from-Attacker', priority: 210, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: attackerPrefix, destination: honeypotPrefix,   port: '22' }
+        { name: 'Allow-AzureMonitor-Out',  priority: 300, direction: 'Outbound', access: 'Allow', protocol: 'Tcp', source: honeypotPrefix, destination: 'AzureMonitor',   port: '443' }
+        { name: 'Allow-HTTPS-Out',         priority: 310, direction: 'Outbound', access: 'Allow', protocol: 'Tcp', source: honeypotPrefix, destination: 'Internet',       port: '443' }
+        { name: 'Allow-HTTP-Out',          priority: 311, direction: 'Outbound', access: 'Allow', protocol: 'Tcp', source: honeypotPrefix, destination: 'Internet',       port: '80' }
+      ],
+      empty(adminIp) ? [] : [
+        { name: 'Allow-Admin-SSH', priority: 220, direction: 'Inbound', access: 'Allow', protocol: 'Tcp', source: adminIp, destination: honeypotPrefix, port: '22222' }
+      ]
+    )
   }
 }
+
+// module nsgHoneypot 'modules/nsg.bicep' = {
+//   name: 'nsg-honeypot'
+//   params: {
+//     name: 'nsg-${prefix}-snet-honeypot'
+//     location: location
+//     rules: [
+//       { name: 'Deny-Honeypot-to-VNet',  priority: 100, direction: 'Outbound', access: 'Deny',  protocol: '*',   source: honeypotPrefix, destination: 'VirtualNetwork', port: '*' }
+//       { name: 'Allow-SSH-from-Internet', priority: 200, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: 'Internet',     destination: honeypotPrefix,   port: '22' }
+//       { name: 'Allow-SSH-from-Attacker', priority: 210, direction: 'Inbound',  access: 'Allow', protocol: 'Tcp', source: attackerPrefix, destination: honeypotPrefix,   port: '22' }
+//     ]
+//   }
+// }
 
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
