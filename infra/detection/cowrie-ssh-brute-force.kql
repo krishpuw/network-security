@@ -1,0 +1,8 @@
+MITRE T1110, severity Medium, schedule 5 min / 15 min lookback, and the entity mapping
+CowrieRaw_CL
+| extend e = parse_json(RawData)
+| where tostring(e.eventid) in ("cowrie.login.failed", "cowrie.login.success")
+| extend src_ip = tostring(e.src_ip)
+| where src_ip != "69.201.24.169"
+| summarize attempts = count(), users = dcount(tostring(e.username)), first_seen = min(TimeGenerated), last_seen = max(TimeGenerated) by src_ip, bin(TimeGenerated, 10m)
+| where attempts >= 5
